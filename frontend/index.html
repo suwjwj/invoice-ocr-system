@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>票据智能识别系统 - 视觉证据追溯</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=7">
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- 侧边导航 (MD3 Navigation Rail) -->
+    <nav class="nav-rail">
+        <button class="nav-rail__fab ripple-host" onclick="navigateTo('upload')" title="上传票据">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+
+        <button class="nav-rail__item active ripple-host" data-view="dashboard" onclick="navigateTo('dashboard')">
+            <span class="nav-rail__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            </span>
+            <span class="nav-rail__label">概览</span>
+        </button>
+
+        <button class="nav-rail__item ripple-host" data-view="upload" onclick="navigateTo('upload')">
+            <span class="nav-rail__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </span>
+            <span class="nav-rail__label">上传</span>
+        </button>
+
+        <button class="nav-rail__item ripple-host" data-view="browse" onclick="navigateTo('browse')">
+            <span class="nav-rail__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            </span>
+            <span class="nav-rail__label">浏览</span>
+        </button>
+
+        <button class="nav-rail__item ripple-host" data-view="analytics" onclick="navigateTo('analytics')">
+            <span class="nav-rail__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </span>
+            <span class="nav-rail__label">分析</span>
+        </button>
+
+        <button class="nav-rail__item ripple-host" data-view="export" onclick="navigateTo('export')">
+            <span class="nav-rail__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            </span>
+            <span class="nav-rail__label">导出</span>
+        </button>
+    </nav>
+
+    <!-- 顶部栏 (MD3 Small Top App Bar) -->
+    <header class="top-app-bar">
+        <div class="top-app-bar__brand">
+            <div class="top-app-bar__logo">AI</div>
+            <div>
+                <div class="top-app-bar__title">票据智能识别系统</div>
+                <div class="top-app-bar__subtitle">VISUAL EVIDENCE TRACING</div>
+            </div>
+        </div>
+        <div class="top-app-bar__chips" id="topBarChips">
+            <span class="stat-chip"><span class="stat-chip__dot" style="background:var(--md-primary)"></span>总计 <span class="stat-chip__value" id="chipTotal">--</span></span>
+            <span class="stat-chip"><span class="stat-chip__dot" style="background:var(--md-green)"></span>通过 <span class="stat-chip__value" id="chipApproved">--</span></span>
+            <span class="stat-chip"><span class="stat-chip__dot" style="background:var(--md-red)"></span>拒绝 <span class="stat-chip__value" id="chipRejected">--</span></span>
+            <span class="stat-chip"><span class="stat-chip__dot" style="background:var(--md-amber)"></span>异常 <span class="stat-chip__value" id="chipAnomaly">--</span></span>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="main-content">
+
+        <!-- ===== 概览视图 ===== -->
+        <div class="view dashboard-view active" id="viewDashboard">
+            <!-- 统计卡片 -->
+            <div class="dashboard-cards" id="dashboardCards">
+                <div class="dashboard-card card-total">
+                    <div class="dashboard-card__header">
+                        <div class="dashboard-card__icon total"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
+                    </div>
+                    <div class="dashboard-card__value counter-anim" id="statTotal">--</div>
+                    <div class="dashboard-card__label">票据总数</div>
+                </div>
+                <div class="dashboard-card card-approved">
+                    <div class="dashboard-card__header">
+                        <div class="dashboard-card__icon approved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+                    </div>
+                    <div class="dashboard-card__value counter-anim" id="statApproved">--</div>
+                    <div class="dashboard-card__label">审核通过</div>
+                </div>
+                <div class="dashboard-card card-rejected">
+                    <div class="dashboard-card__header">
+                        <div class="dashboard-card__icon rejected"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+                    </div>
+                    <div class="dashboard-card__value counter-anim" id="statRejected">--</div>
+                    <div class="dashboard-card__label">审核拒绝</div>
+                </div>
+                <div class="dashboard-card card-anomaly">
+                    <div class="dashboard-card__header">
+                        <div class="dashboard-card__icon anomaly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                    </div>
+                    <div class="dashboard-card__value counter-anim" id="statAnomaly">--</div>
+                    <div class="dashboard-card__label">异常标记</div>
+                </div>
+            </div>
+
+            <!-- 第二行：系统信息 + 处理概览 -->
+            <div class="dashboard-row">
+                <div class="info-panel">
+                    <div class="info-panel__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        系统信息
+                    </div>
+                    <div class="info-panel__body" id="systemInfo">
+                        <div class="info-row"><span class="info-row__label">识别引擎</span><span class="info-row__value">PaddleOCR v2</span></div>
+                        <div class="info-row"><span class="info-row__label">评分模型</span><span class="info-row__value">Full (α=0.4, β=0.3, γ=0.3)</span></div>
+                        <div class="info-row"><span class="info-row__label">数据集</span><span class="info-row__value">SROIE + 用户上传</span></div>
+                        <div class="info-row"><span class="info-row__label">提取字段</span><span class="info-row__value">公司 / 日期 / 地址 / 总金额</span></div>
+                    </div>
+                </div>
+                <div class="info-panel">
+                    <div class="info-panel__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        处理状态分布
+                    </div>
+                    <div class="info-panel__body" id="statusDistribution">
+                        <div class="status-bar-chart" id="statusBarChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近活动 -->
+            <div class="recent-activity">
+                <div class="recent-activity__header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    最近操作记录
+                </div>
+                <div class="recent-activity__list" id="recentActivity">
+                    <div class="empty-state">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text medium"></div>
+                        <div class="skeleton skeleton-text short"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 上传视图 ===== -->
+        <div class="view upload-view" id="viewUpload">
+            <div class="upload-dropzone ripple-host" id="uploadDropzone">
+                <div class="upload-dropzone__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                </div>
+                <div class="upload-dropzone__text">将票据图片拖拽到此处，或点击选择文件</div>
+                <div class="upload-dropzone__hint">支持 JPG / PNG / BMP / TIFF 格式 | 系统将自动执行 OCR 识别与字段提取</div>
+                <input type="file" id="fileInput" multiple accept="image/*">
+            </div>
+            <div class="upload-queue" id="uploadQueue"></div>
+        </div>
+
+        <!-- ===== 浏览视图 ===== -->
+        <div class="view browse-view" id="viewBrowse">
+            <div class="filter-bar" id="filterBar">
+                <span class="filter-bar__label">筛选</span>
+                <button class="filter-chip active ripple-host" data-status="" onclick="filterByStatus(this, '')">全部</button>
+                <button class="filter-chip ripple-host" data-status="processed" onclick="filterByStatus(this, 'processed')">已处理</button>
+                <button class="filter-chip ripple-host" data-status="approved" onclick="filterByStatus(this, 'approved')">已通过</button>
+                <button class="filter-chip ripple-host" data-status="rejected" onclick="filterByStatus(this, 'rejected')">已拒绝</button>
+                <button class="filter-chip ripple-host" data-status="pending" onclick="filterByStatus(this, 'pending')">待处理</button>
+                <button class="filter-chip ripple-host" data-status="anomaly" onclick="filterByStatus(this, 'anomaly')">异常</button>
+
+                <div class="filter-bar__spacer"></div>
+
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="搜索文件名或字段值..." onkeydown="if(event.key==='Enter')doSearch()">
+                    <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">&times;</button>
+                </div>
+
+                <div class="conf-filter">
+                    <label>置信度%</label>
+                    <input type="number" id="confMin" min="0" max="100" step="5" placeholder="0" onchange="doSearch()">
+                    <span>-</span>
+                    <input type="number" id="confMax" min="0" max="100" step="5" placeholder="100" onchange="doSearch()">
+                </div>
+            </div>
+
+            <!-- 批量操作栏 -->
+            <div class="batch-bar" id="batchBar" style="display:none">
+                <label class="batch-select-all">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+                    <span>全选</span>
+                </label>
+                <span class="batch-count" id="batchCount">已选 0 项</span>
+                <div class="batch-bar__spacer"></div>
+                <button class="btn btn--filled approve ripple-host btn--sm" onclick="batchAction('approve')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    批量通过
+                </button>
+                <button class="btn btn--filled reject ripple-host btn--sm" onclick="batchAction('reject')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    批量拒绝
+                </button>
+                <button class="btn btn--outlined ripple-host btn--sm btn--danger" onclick="batchDelete()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    删除
+                </button>
+                <button class="btn btn--outlined ripple-host btn--sm" onclick="exportExcel()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    导出Excel
+                </button>
+            </div>
+
+            <div class="browse-columns">
+                <!-- 左栏：列表 -->
+                <div class="invoice-list-panel">
+                    <div class="invoice-list-panel__header" id="listHeader">票据列表</div>
+                    <div class="invoice-list" id="invoiceList">
+                        <div class="empty-state">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                        </div>
+                    </div>
+                    <div class="pagination">
+                        <button id="btnPrev" onclick="prevPage()">&#8249;</button>
+                        <span class="page-info" id="pageInfo">1 / 1</span>
+                        <button id="btnNext" onclick="nextPage()">&#8250;</button>
+                    </div>
+                </div>
+
+                <!-- 中栏：图片（可拖拽平移+滚轮缩放+双击全屏） -->
+                <div class="image-panel" id="imagePanel">
+                    <div class="canvas-wrapper" id="canvasWrapper">
+                        <div class="canvas-container" id="canvasContainer">
+                            <div class="image-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                从左侧列表选择一张票据
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 图片控制条 -->
+                    <div class="image-controls" id="imageControls" style="display:none">
+                        <button class="img-ctrl-btn" onclick="zoomImage(-0.2)" title="缩小">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                        <span class="img-ctrl-zoom" id="zoomLevel">100%</span>
+                        <button class="img-ctrl-btn" onclick="zoomImage(0.2)" title="放大">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                        <button class="img-ctrl-btn" onclick="resetImageView()" title="重置视图">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+                        </button>
+                        <button class="img-ctrl-btn fullscreen-btn" onclick="toggleFullscreen()" title="全屏" id="fullscreenBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3"/></svg>
+                        </button>
+                    </div>
+                    <div class="legend" style="display:none" id="legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--field-company)"></div>公司</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--field-date)"></div>日期</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--field-address)"></div>地址</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--field-total)"></div>金额</div>
+                    </div>
+                </div>
+
+                <!-- 右栏：详情 -->
+                <div class="detail-panel" id="detailPanel">
+                    <!-- 审核操作 -->
+                    <div class="review-actions" id="reviewActions" style="display:none">
+                        <button class="btn btn--filled approve ripple-host" id="btnApprove" onclick="approveInvoice()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                            通过
+                        </button>
+                        <button class="btn btn--filled reject ripple-host" id="btnReject" onclick="rejectInvoice()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            拒绝
+                        </button>
+                        <span class="status-chip" id="currentStatus" style="margin-left:auto"></span>
+                    </div>
+
+                    <!-- 票据元数据 -->
+                    <div class="section-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                        票据信息
+                    </div>
+                    <div class="invoice-meta" id="invoiceMeta">
+                        <div class="empty-state">选择票据以查看信息</div>
+                    </div>
+
+                    <!-- 字段 -->
+                    <div class="section-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        字段提取结果
+                    </div>
+                    <div class="field-cards" id="fieldCards">
+                        <div class="empty-state">选择票据以查看字段</div>
+                    </div>
+
+                    <!-- 候选值 -->
+                    <div class="section-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        候选值决策链
+                    </div>
+                    <div class="candidates-section" id="candidatesSection">
+                        <div class="empty-state">点击字段卡片查看候选值</div>
+                    </div>
+
+                    <!-- OCR 文本 -->
+                    <div class="section-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                        OCR 原始文本
+                    </div>
+                    <div class="ocr-text-preview" id="ocrTextPreview">
+                        <div class="empty-state">选择票据以查看 OCR 文本</div>
+                    </div>
+
+                    <!-- 审计日志 -->
+                    <div class="section-header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        审计日志
+                    </div>
+                    <div class="timeline" id="auditTimeline">
+                        <div class="empty-state">选择票据以查看日志</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 分析视图 ===== -->
+        <div class="view analytics-view" id="viewAnalytics">
+            <!-- 总览统计卡片 -->
+            <div class="analytics-section">
+                <div class="analytics-section__header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                    系统总览
+                </div>
+                <div class="overview-stats" id="overviewStats">
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </div>
+
+            <!-- 准确率概览 -->
+            <div class="analytics-section">
+                <div class="analytics-section__header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    字段准确率（Ground Truth 对比）
+                </div>
+                <div class="accuracy-cards" id="accuracyCards">
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="analytics-charts">
+                <div class="chart-card">
+                    <div class="chart-card__title">置信度分布</div>
+                    <canvas id="chartConfDist" width="480" height="280"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card__title">处理时间分布</div>
+                    <canvas id="chartTimeDist" width="480" height="280"></canvas>
+                </div>
+            </div>
+
+            <div class="analytics-charts">
+                <div class="chart-card">
+                    <div class="chart-card__title">各字段置信度对比</div>
+                    <canvas id="chartFieldConf" width="480" height="280"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-card__title">状态分布</div>
+                    <canvas id="chartStatusDist" width="480" height="280"></canvas>
+                </div>
+            </div>
+
+            <div class="analytics-charts">
+                <div class="chart-card wide">
+                    <div class="chart-card__title">处理时间趋势（最近50条）</div>
+                    <canvas id="chartTimeTrend" width="960" height="280"></canvas>
+                </div>
+            </div>
+
+            <!-- 字段置信度详情表 -->
+            <div class="analytics-section">
+                <div class="analytics-section__header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    字段置信度统计
+                </div>
+                <div class="analytics-table-wrap" id="fieldConfTable">
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 导出视图 ===== -->
+        <div class="view export-view" id="viewExport">
+            <div class="export-page-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <div>
+                    <h2>数据导出</h2>
+                    <p>将票据识别数据导出为 Excel 文件，支持按状态筛选</p>
+                </div>
+            </div>
+
+            <div class="export-grid">
+                <button class="export-card-lg ripple-host" onclick="exportExcel()">
+                    <div class="export-card-lg__icon" style="background:rgba(168,199,250,0.12)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--md-primary)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    </div>
+                    <div class="export-card-lg__title">导出全部数据</div>
+                    <div class="export-card-lg__desc">导出所有票据，包含识别结果、置信度、处理时间等完整信息</div>
+                    <span class="export-card-lg__badge" id="exportCountAll">--</span>
+                </button>
+
+                <button class="export-card-lg ripple-host" onclick="exportExcel('approved')">
+                    <div class="export-card-lg__icon" style="background:var(--md-green-container)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--md-green)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    </div>
+                    <div class="export-card-lg__title">导出已通过</div>
+                    <div class="export-card-lg__desc">仅导出审核通过的票据数据</div>
+                    <span class="export-card-lg__badge" style="background:var(--md-green-container);color:var(--md-green)" id="exportCountApproved">--</span>
+                </button>
+
+                <button class="export-card-lg ripple-host" onclick="exportExcel('rejected')">
+                    <div class="export-card-lg__icon" style="background:var(--md-red-container)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--md-red)" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </div>
+                    <div class="export-card-lg__title">导出已拒绝</div>
+                    <div class="export-card-lg__desc">仅导出审核拒绝的票据数据</div>
+                    <span class="export-card-lg__badge" style="background:var(--md-red-container);color:var(--md-red)" id="exportCountRejected">--</span>
+                </button>
+
+                <button class="export-card-lg ripple-host" onclick="exportExcel('processed')">
+                    <div class="export-card-lg__icon" style="background:var(--md-amber-container, rgba(232,192,106,0.12))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--md-amber)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="export-card-lg__title">导出已处理</div>
+                    <div class="export-card-lg__desc">已完成 OCR 但尚未审核的票据</div>
+                    <span class="export-card-lg__badge" style="background:rgba(232,192,106,0.12);color:var(--md-amber)" id="exportCountProcessed">--</span>
+                </button>
+
+                <button class="export-card-lg ripple-host" onclick="exportExcel('pending')">
+                    <div class="export-card-lg__icon" style="background:rgba(145,143,154,0.12)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--md-outline)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M12 8v4l3 3"/></svg>
+                    </div>
+                    <div class="export-card-lg__title">导出待处理</div>
+                    <div class="export-card-lg__desc">尚未进行 OCR 处理的票据</div>
+                    <span class="export-card-lg__badge" style="background:rgba(145,143,154,0.12);color:var(--md-outline)" id="exportCountPending">--</span>
+                </button>
+            </div>
+
+            <div class="export-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>导出格式为 Excel (.xlsx)，包含字段：样本ID、状态、风险等级、公司名称、日期、地址、总金额及各字段置信度、处理耗时、时间戳</span>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- 编辑字段弹窗 (MD3 Dialog) -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-dialog">
+        <div class="modal-dialog__title" id="editModalTitle">编辑字段</div>
+        <div class="modal-dialog__field-label" id="editModalLabel">字段值</div>
+        <input class="modal-dialog__input" id="editModalInput" type="text" placeholder="输入新值...">
+        <div class="modal-dialog__actions">
+            <button class="btn btn--outlined ripple-host" onclick="closeEditModal()">取消</button>
+            <button class="btn btn--primary ripple-host" onclick="saveFieldEdit()">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 通知 -->
+<div class="snackbar-container" id="snackbarContainer"></div>
+
+<script src="/static/js/app.js?v=7"></script>
+</body>
+</html>

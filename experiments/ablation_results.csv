@@ -1,0 +1,5 @@
+config,alpha,beta,gamma,total_accuracy,company_acc,date_acc,address_acc,total_acc,num_samples,avg_ocr_time_ms
+baseline,1.0,0.0,0.0,0.5687,0.2971,0.8147,0.5383,0.6246,626,6142.8
+format,0.6,0.4,0.0,0.6334,0.5112,0.8594,0.5383,0.6246,626,6142.8
+crossfield,0.5,0.0,0.5,0.6022,0.2987,0.9042,0.5367,0.6693,626,6142.8
+full,0.4,0.3,0.3,0.6550,0.5112,0.9026,0.5367,0.6693,626,6142.8

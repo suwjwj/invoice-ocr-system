@@ -1,0 +1,9 @@
+metric,mean,median,std,min,max
+ocr_time_ms,6142.82,5714.26,2309.95,1101.15,16125.13
+extract_time_ms,15.31,14.03,6.61,4.56,49.81
+total_time_ms,18.13,16.56,7.33,6.07,54.24
+
+explainability_metric,value,target,met
+ECR,0.9996,0.95,Yes
+DTS,0.9996,0.90,Yes
+TCS,1.0000,0.95,Yes
